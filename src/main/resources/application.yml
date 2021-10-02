@@ -1,0 +1,39 @@
+server:
+  port: 8881
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/mall?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    password: 123456
+    username: root
+  redis:
+    host: localhost # 服务器地址
+    database: 0 # 数据库
+    port: 6379 # 端口
+    password: #密码
+    jedis:
+      pool:
+        max-active: 8 # 连接池最大连接数
+        max-wait: -1ms # 连接池最大阻塞时间
+        max-idle: 8 # 最大空闲连接
+        min-idle: 0 # 最小空闲连接
+    timeout: 3000ms # 连接超时时间
+
+mybatis:
+  mapper-locations:
+    - classpath:mapper/*.xml
+    - classpath*:com/**/mapper/*.xml
+
+#自定义redis
+redis:
+  key:
+    prefix:
+      authCode: "portal:authCode:"
+    expire:
+      authCode: 120 # 自定义时间
+
+#自定义jwt key
+jwt:
+  tokenHeader: Authorization # JWT存储的请求头
+  secret: mySecret # JWT加解密使用的密钥
+  expiration: 604800 # JWT超时的时间 7 * 24 * 60 * 60
+  tokenHead: Bearer # JWT负载中拿到的开头
