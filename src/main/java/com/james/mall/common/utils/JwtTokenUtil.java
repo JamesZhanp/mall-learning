@@ -3,6 +3,7 @@ package com.james.mall.common.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,23 +16,27 @@ import java.util.Map;
 
 /**
  * * JwtToken生成的工具类
- *  * JWT token的格式：header.payload.signature
- *  * header的格式（算法、token的类型）：
- *  * {"alg": "HS512","typ": "JWT"}
- *  * payload的格式（用户名、创建时间、生成时间）：
- *  * {"sub":"wang","created":1489079981393,"exp":1489684781}
- *  * signature的生成算法：
- *  * HMACSHA512(base64UrlEncode(header) + "." +base64UrlEncode(payload),secret)
+ * * JWT token的格式：header.payload.signature
+ * * header的格式（算法、token的类型）：
+ * * {"alg": "HS512","typ": "JWT"}
+ * * payload的格式（用户名、创建时间、生成时间）：
+ * * {"sub":"wang","created":1489079981393,"exp":1489684781}
+ * * signature的生成算法：
+ * * HMACSHA512(base64UrlEncode(header) + "." +base64UrlEncode(payload),secret)
  *
  * @author: JamesZhan
  * @create: 2021 - 03 - 08 0:07
  */
 
 @Component
+@Slf4j
 public class JwtTokenUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenUtil.class);
     private static final String CLAIM_KEY_USERNAME = "sub";
     private static final String CLAIM_KEY_CREATED = "created";
+
+    /**
+     * 读取配置文件中的内容
+     */
 
     @Value("${jwt.secret}")
     private String secret;
@@ -41,10 +46,11 @@ public class JwtTokenUtil {
 
     /**
      * 生成JWT的token
+     *
      * @param claims
      * @return
      */
-    private String generateToken(Map<String, Object> claims){
+    private String generateToken(Map<String, Object> claims) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setExpiration(generateExpirationDate())
@@ -55,19 +61,20 @@ public class JwtTokenUtil {
 
     /**
      * 从token中获取JWT的负载
+     *
      * @param token
      * @return
      */
-    private Claims getClaimsFromToken(String token){
+    private Claims getClaimsFromToken(String token) {
 
         Claims claims = null;
-        try{
+        try {
             claims = Jwts.parser()
                     .setSigningKey(secret)
                     .parseClaimsJws(token)
                     .getBody();
-        }catch (Exception e){
-            LOGGER.info("JWT的格式验证失败！！：{}", token);
+        } catch (Exception e) {
+            log.info("JWT的格式验证失败！！：{}", token);
         }
 
         return claims;
@@ -75,24 +82,26 @@ public class JwtTokenUtil {
 
     /**
      * 生成token过期时间
+     *
      * @return
      */
-    private Date generateExpirationDate(){
+    private Date generateExpirationDate() {
         return new Date(System.currentTimeMillis() + expiration * 1000);
     }
 
 
     /**
      * 从token中获取登录的用户名
+     *
      * @param token
      * @return
      */
-    public String getUserNameFromToken(String token){
+    public String getUserNameFromToken(String token) {
         String username;
-        try{
+        try {
             Claims claims = getClaimsFromToken(token);
             username = claims.getSubject();
-        }catch (Exception e){
+        } catch (Exception e) {
             username = null;
         }
         return username;
@@ -101,11 +110,12 @@ public class JwtTokenUtil {
 
     /**
      * 判断token是否过期
+     *
      * @param token
      * @param userDetails 从数据库查询出来的用户信息
      * @return
      */
-    public boolean validationToken(String token, UserDetails userDetails){
+    public boolean validationToken(String token, UserDetails userDetails) {
         String username = getUserNameFromToken(token);
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
@@ -113,12 +123,13 @@ public class JwtTokenUtil {
 
     /**
      * 判断是否过期
+     *
      * @param token
      * @return
      */
-    public boolean isTokenExpired(String token){
+    public boolean isTokenExpired(String token) {
 
-        Date expiredDate =getExpiredDateFromToken(token);
+        Date expiredDate = getExpiredDateFromToken(token);
         return expiredDate.before(new Date());
     }
 
